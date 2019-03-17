@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<VuforiaUnityInfo version="7.0">
+    <TargetSet version="5.0" toolVersion="2.7.4">
+        <CylinderTarget name="chipstower" version="3.0" targetId="89129a07d3ed40d48fa373dc64370e81" sideLength="0.210000" topDiameter="0.095000" bottomDiameter="0.095000" sideImage="chipstower.Body_scaled.jpg" topImage="chipstower.Top_scaled.jpg" bottomImage="chipstower.Bottom_scaled.jpg"/>
+        <CylinderTarget name="tarmactower" version="3.0" targetId="8e3386229cb0430485ac566f4a292414" sideLength="0.210000" topDiameter="0.095000" bottomDiameter="0.095000" sideImage="tarmactower.Body_scaled.jpg" topImage="tarmactower.Top_scaled.jpg" bottomImage="tarmactower.Bottom_scaled.jpg"/>
+        <CylinderTarget name="stonetower" version="3.0" targetId="0a81e1f5ef514a6e951df313ff5a1fc2" sideLength="0.210000" topDiameter="0.095000" bottomDiameter="0.095000" sideImage="stonetower.Body_scaled.jpg" topImage="stonetower.Top_scaled.jpg" bottomImage="stonetower.Bottom_scaled.jpg"/>
+    </TargetSet>
+</VuforiaUnityInfo>
