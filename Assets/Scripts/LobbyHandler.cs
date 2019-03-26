@@ -114,5 +114,6 @@ public class LobbyHandler : MonoBehaviour
         LobbyPanel.SetActive(false);
         GamePanel.SetActive(true);
         WheelMaster.GetComponent<WheelHandler>().enabled = true;
+        WheelMaster.GetComponent<CollisionHandler>().enabled = true;
     }
 }
