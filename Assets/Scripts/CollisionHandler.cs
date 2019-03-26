@@ -16,9 +16,10 @@ public class CollisionHandler : MonoBehaviour
 
     private int CurrSection = 1;
     private int CurrLap = 1;
-    public int TotalSection = 2;
+    public int TotalSection;
     public int TotalLap = 3;
     private Dictionary<string, CheckpointInfo> checkpoints = new Dictionary<string, CheckpointInfo>();
+
     [System.Serializable]
     public class CheckpointInfo
     {
@@ -56,8 +57,8 @@ void Start()
         //Set up dictionary mapping collision object to object target
         //Dictionary<string, string> checkpoints = new Dictionary<string, string>(); // commmented out because alr declared as private var
 
-        CheckpointInfo CheckPointB = new CheckpointInfo("Target2", 2, "Target3", false, true);
-        CheckpointInfo CheckPointC = new CheckpointInfo("Target3", 3, "Target4", false, false);
+        CheckpointInfo CheckPointB = new CheckpointInfo("Target2", 2, "Target3", false, false);
+        CheckpointInfo CheckPointC = new CheckpointInfo("Target3", 3, "Target4", false, true);
         CheckpointInfo CheckPointD = new CheckpointInfo("Target4", 4, "Target1", false, false);
         //You can place variables into the Dictionary with the
         //Add() method.
@@ -69,7 +70,7 @@ void Start()
         // TODO bad hardcoded stuff pls fix
         UpdateGreen(initCheckpoint.ObjectTarget);
         UpdateRed(CheckPointB.ObjectTarget);
-        //UpdateRed(CheckPointC.ObjectTarget);
+        UpdateRed(CheckPointC.ObjectTarget);
         //UpdateRed(CheckPointD.ObjectTarget);
 
     }
@@ -180,7 +181,18 @@ void Start()
             {
                 WrongFlagAlert();
             }
-        } 
+        }
+        else if (obj.name == "Flag3")
+        {
+            if (CurrSection == 3)
+            {
+                UpdateStats();
+            }
+            else
+            {
+                WrongFlagAlert();
+            }
+        }
     }
 
     protected virtual void UpdateTextNew(CheckpointInfo obj)
