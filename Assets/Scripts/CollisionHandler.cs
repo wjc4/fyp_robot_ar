@@ -2,7 +2,47 @@
 using System.Collections.Generic;
 //using TMPro;
 using UnityEngine;
+using UnityEngine.Networking;
 using UnityEngine.UI;
+
+[System.Serializable]
+public class UpdatePayload
+{
+    public string id;
+    public int checkpoint;
+    public int lap;
+}
+
+[System.Serializable]
+public class UpdateResponse
+{
+    public string id;
+    public int checkpoint;
+    public int lap;
+    public int rank;
+    public int num_players;
+    public BuffHistory[] buffs;
+}
+
+[System.Serializable]
+public class BuffHistory
+{
+    public string id;
+    public string buff;
+}
+
+[System.Serializable]
+public class GameEndPayload
+{
+    public string id;
+}
+
+[System.Serializable]
+public class GameEndResponse
+{
+    public int rank;
+    public int num_players;
+}
 
 public class CollisionHandler : MonoBehaviour
 {
@@ -13,6 +53,15 @@ public class CollisionHandler : MonoBehaviour
     public Text NotificationText;
     public Image NotificationBG;
     public float respawntime = 2f;
+
+    // @TODO fix this hardcode section
+    public string multiplayer_id;
+    public string serverUrl;
+    private string updateAPI;
+    private string gameEndAPI;
+    public Text PositionText;
+    public GameObject gameOverPanel;
+    public Text gameOverText;
 
     private int CurrSection = 1;
     private int CurrLap = 1;
@@ -53,6 +102,20 @@ void Start()
         NotificationText.text = "debug";
         Disappear(NotificationText);
         Disappear(NotificationBG);
+
+
+
+        //@TODO fix this once server changes
+        updateAPI = serverUrl + "update";
+        gameEndAPI = serverUrl + "complete";
+        UpdatePayload updateData = new UpdatePayload();
+        updateData.id = multiplayer_id;
+        updateData.checkpoint = CurrSection;
+        updateData.lap = CurrLap;
+        StartCoroutine(UpdateRank(updateData));
+
+
+
 
         //Set up dictionary mapping collision object to object target
         //Dictionary<string, string> checkpoints = new Dictionary<string, string>(); // commmented out because alr declared as private var
@@ -223,15 +286,83 @@ void Start()
 
     protected virtual void UpdateStats()
     {
+        
         if (CurrSection == TotalSection)
         {
+            if (CurrLap == TotalLap)
+            {
+                StartCoroutine(GameEnd());
+            }
             CurrLap = (CurrLap) % TotalLap + 1;
-
         }
+
         CurrSection = (CurrSection)%TotalSection+1;
         FlagText.text = "Section: " + CurrSection + "/" + TotalSection;
         LapText.text = "Lap: " + CurrLap + "/" + TotalLap;
+        UpdatePayload updateData = new UpdatePayload();
+        updateData.id = multiplayer_id;
+        updateData.checkpoint = CurrSection;
+        updateData.lap = CurrLap;
+        StartCoroutine(UpdateRank(updateData));
+    }
 
+    IEnumerator UpdateRank(UpdatePayload updateData)
+    {
+        var jsonString = JsonUtility.ToJson(updateData);
+        UnityWebRequest request = UnityWebRequest.Put(updateAPI, jsonString);
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        yield return request.SendWebRequest();
+
+        if (request.isNetworkError || request.isHttpError)
+        {
+            Debug.Log(request.error);
+        }
+        else
+        {
+            // Show results as text
+            Debug.Log(request.downloadHandler.text);
+            UpdateResponse response = JsonUtility.FromJson<UpdateResponse>(request.downloadHandler.text);
+            var rank = response.rank;
+            var num_players = response.num_players;
+            PositionText.text = "Position: " + rank + "/" + num_players;
+        }
+    }
+
+    IEnumerator GameEnd()
+    {
+        GameEndPayload gameEndData = new GameEndPayload();
+        gameEndData.id = multiplayer_id;
+        var jsonString = JsonUtility.ToJson(gameEndData);
+        UnityWebRequest request = UnityWebRequest.Put(gameEndAPI, jsonString);
+        request.SetRequestHeader("Content-Type", "application/json");
+
+        yield return request.SendWebRequest();
+
+        if (request.isNetworkError || request.isHttpError)
+        {
+            Debug.Log(request.error);
+        }
+        else
+        {
+            // Show results as text
+            Debug.Log(request.downloadHandler.text);
+            GameEndResponse response = JsonUtility.FromJson<GameEndResponse>(request.downloadHandler.text);
+            var rank = response.rank;
+            var num_players = response.num_players;
+            // @TODO print you win
+            if (rank == 1)
+            {
+                gameOverText.text = "You Win!";
+            } else
+            {
+                gameOverText.text = "You Lose!";
+            }
+            
+            gameOverPanel.SetActive(true);
+            
+
+        }
     }
 
     protected virtual void WrongFlagAlert()
