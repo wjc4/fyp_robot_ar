@@ -276,6 +276,7 @@ void Start()
                 UpdateGreen(obj.NextObjectTarget);
             }
             // TODO play sound
+            teleportSound.Play();
         }
         else
         {
