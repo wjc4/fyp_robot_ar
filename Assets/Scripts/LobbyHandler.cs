@@ -11,6 +11,14 @@ public class JoinPayload
 }
 
 [System.Serializable]
+public class JoinResponse
+{
+    public string id;
+    public string name;
+    public bool host;
+}
+
+[System.Serializable]
 public class UpdateLobbyPayload
 {
     public string id;
@@ -43,6 +51,7 @@ public class LobbyHandler : MonoBehaviour
     private string joinLobbyAPI;
     private string updateLobbyAPI;
     private JoinPayload data;
+    private bool isHost = false;
 
     // Start is called before the first frame update
     void Start()
@@ -71,8 +80,9 @@ public class LobbyHandler : MonoBehaviour
         {
             // Show results as text
             Debug.Log(request.downloadHandler.text);
-            JoinPayload response = JsonUtility.FromJson<JoinPayload>(request.downloadHandler.text);
+            JoinResponse response = JsonUtility.FromJson<JoinResponse>(request.downloadHandler.text);
             Debug.Log(response.id);
+            isHost = response.host;
         }
     }
 

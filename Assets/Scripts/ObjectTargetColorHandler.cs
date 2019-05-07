@@ -15,6 +15,15 @@ public class ObjectTargetColorHandler : MonoBehaviour
             component.ToGreen();
         foreach (var component in materialColorComponents)
             component.ToGreen();
+
+        foreach (Transform child in transform)
+        {
+            //implement regex
+            if (child.name.Contains("Cube"))
+            {
+                Appear(child.gameObject);
+            }
+        }
     }
 
     public void ToRed()
@@ -25,5 +34,24 @@ public class ObjectTargetColorHandler : MonoBehaviour
             component.ToRed();
         foreach (var component in materialColorComponents)
             component.ToRed();
+
+        foreach (Transform child in transform)
+        {
+            //implement regex
+            if (child.name.Contains("Cube"))
+            {
+                Disappear(child.gameObject);
+            }
+        }
+    }
+
+    protected virtual void Disappear(GameObject obj)
+    {
+        obj.SetActive(false);
+    }
+
+    protected virtual void Appear(GameObject obj)
+    {
+        obj.SetActive(true);
     }
 }

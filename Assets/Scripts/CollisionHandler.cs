@@ -22,6 +22,7 @@ public class UpdateResponse
     public int rank;
     public int num_players;
     public BuffHistory[] buffs;
+    public string pickup;
 }
 
 [System.Serializable]
@@ -62,6 +63,9 @@ public class CollisionHandler : MonoBehaviour
     public Text PositionText;
     public GameObject gameOverPanel;
     public Text gameOverText;
+    public GameObject pickupPanel;
+    public Text pickupText;
+    public GameObject blurPanel;
 
     private int CurrSection = 1;
     private int CurrLap = 1;
@@ -136,6 +140,9 @@ void Start()
         UpdateRed(CheckPointC.ObjectTarget);
         //UpdateRed(CheckPointD.ObjectTarget);
 
+
+
+        InvokeRepeating("UpdateProgress", 0, 1.0f);
     }
 
     // Update is called once per frame
@@ -327,7 +334,58 @@ void Start()
             var rank = response.rank;
             var num_players = response.num_players;
             PositionText.text = "Position: " + rank + "/" + num_players;
+            if (response.pickup != "nothing")
+            {
+                StartCoroutine(ShowPickup(response.pickup, 3.0f)); 
+            }
+
+            CarHandler car = GetComponent<CarHandler>();
+            //effect buff on user (boost, stun, slow, blur)
+            if (response.buffs.Length != 0)
+            {
+                float multiplier = 1;
+                for (int i = 0; i<response.buffs.Length; i++)
+                {
+                    switch (response.buffs[i].buff)
+                    {
+                        case "boost":
+                            multiplier *= 1.3f;
+                            break;
+                        case "stun":
+                            car.stun = true;
+                            break;
+                        case "slow":
+                            multiplier *= 0.7f;
+                            break;
+                        case "blur":
+                            StartCoroutine(BlurScreen());
+                            break;
+                    }
+                }
+                car.multiplier = multiplier;
+            } else
+            {
+                car.stun = false;
+                car.multiplier = 1;
+            }
+            
         }
+    }
+
+    IEnumerator BlurScreen()
+    {
+        blurPanel.SetActive(true);
+        yield return new WaitForSeconds(1);
+        blurPanel.SetActive(false);
+    }
+
+    protected virtual void UpdateProgress()
+    {
+        UpdatePayload updateData = new UpdatePayload();
+        updateData.id = multiplayer_id;
+        updateData.checkpoint = CurrSection;
+        updateData.lap = CurrLap;
+        StartCoroutine(UpdateRank(updateData));
     }
 
     IEnumerator GameEnd()
@@ -364,6 +422,14 @@ void Start()
             
 
         }
+    }
+
+    IEnumerator ShowPickup(string Message, float duration)
+    {
+        pickupText.text = "Activating " + Message + "!";
+        pickupPanel.SetActive(true);
+        yield return new WaitForSeconds(duration);
+        pickupPanel.SetActive(false);
     }
 
     protected virtual void WrongFlagAlert()

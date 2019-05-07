@@ -9,7 +9,9 @@ public class WheelHandler : MonoBehaviour
     public float steeringAxes, gasAxes, brakeAxes;
     public bool simple;
     public bool wheel;
+    public bool wheelspring;
     public int steeringStatus, gasStatus, brakeStatus;
+    public float steeringRatio, gasRatio, brakeRatio;
 
     private string actualState;
 
@@ -62,7 +64,7 @@ public class WheelHandler : MonoBehaviour
             }
 
             //Spring Force -> S
-            if (Input.GetKeyUp(KeyCode.S))
+            if (Input.GetKeyUp(KeyCode.S) && !wheelspring)
             {
                 if (LogitechGSDK.LogiIsPlaying(0, LogitechGSDK.LOGI_FORCE_SPRING))
                 {
@@ -73,6 +75,16 @@ public class WheelHandler : MonoBehaviour
                 {
                     LogitechGSDK.LogiPlaySpringForce(0, 0, 24, 90);
 
+                }
+            }
+
+            if (wheelspring)
+            {
+                if (LogitechGSDK.LogiIsPlaying(0, LogitechGSDK.LOGI_FORCE_SPRING))
+                {}
+                else
+                {
+                    LogitechGSDK.LogiPlaySpringForce(0, 0, 24, 90);
                 }
             }
 
@@ -158,17 +170,20 @@ public class WheelHandler : MonoBehaviour
     void ComplexCalc()
     {
         //1000-15000 trigger
-        if (steeringAxes < 1000 && steeringAxes > 1000)
+        if (steeringAxes < 1000 && steeringAxes > -1000)
         {
             steeringStatus = 0;
+            steeringRatio = 0;
         }
-        else if (steeringAxes > 2000)
+        else if (steeringAxes >= 1000)
         {
             steeringStatus = 1;
+            steeringRatio = (steeringAxes)/10000f;
         }
         else
         {
-            steeringStatus = 0;
+            steeringStatus = -1;
+            steeringRatio = (steeringAxes)/10000f;
         }
 
         if (brakeAxes < 30000)
@@ -178,6 +193,16 @@ public class WheelHandler : MonoBehaviour
         else
         {
             brakeStatus = 0;
+        }
+
+        if (gasAxes < 30000)
+        {
+            gasStatus = 1;
+ 
+        }
+        else
+        {
+            gasStatus = 0;
         }
     }
 }
