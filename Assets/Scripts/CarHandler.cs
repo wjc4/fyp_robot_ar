@@ -17,6 +17,7 @@ public class CarHandler : MonoBehaviour
     public int testvar;
     public float multiplier = 1f;
     public bool stun = false;
+    public bool limitUpdate = true;
 
     private string api;
     private payload data;
@@ -34,10 +35,19 @@ public class CarHandler : MonoBehaviour
         request.SetRequestHeader("Content-Type", "application/json");
         request.SendWebRequest();
         prevAction = data.action;
+        if (limitUpdate) StartCoroutine(UpdateTimer());
+
     }
 
-    // Update is called once per frame
-    void Update()
+    IEnumerator UpdateTimer()
+    {
+        for(; ;) {
+            CarUpdate();
+            yield return new WaitForSeconds(0.1f);
+        }
+    }
+
+    void CarUpdate()
     {
         data.multiplier = multiplier;
 
@@ -89,7 +99,8 @@ public class CarHandler : MonoBehaviour
                 request.SendWebRequest();
                 prevAction = data.action;
             }
-        } else
+        }
+        else
         {
             if (wheel.brakeStatus == 1 && wheel.gasStatus == 1)
             {
@@ -130,8 +141,14 @@ public class CarHandler : MonoBehaviour
             request.SendWebRequest();
 
         }
-        
-        
 
+
+
+    }
+
+    // Update is called once per frame
+    void Update()
+    {
+        if (!limitUpdate) CarUpdate();
     }
 }

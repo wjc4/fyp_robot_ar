@@ -1,16 +1,22 @@
 fileFormatVersion: 2
-guid: b1a60389395373a44b38c04caf8e6502
+guid: 428df5d9fe54f3341b75e25244b450b2
 ModelImporter:
   serializedVersion: 23
   fileIDToRecycleName:
     100000: //RootNode
+    100002: Camera
+    100004: Cube
+    100006: Lamp
     400000: //RootNode
-    2100000: Material__ddca83be0c1e46c8f053fa97c9c30d4b_jpg
-    2300000: //RootNode
-    3300000: //RootNode
+    400002: Camera
+    400004: Cube
+    400006: Lamp
+    2000000: Camera
+    2100000: Material
+    2300000: Cube
+    3300000: Cube
     4300000: Cube
-    7400000: Default Take
-    9500000: //RootNode
+    10800000: Lamp
   externalObjects: {}
   materials:
     importMaterials: 1
@@ -64,7 +70,7 @@ ModelImporter:
     secondaryUVPackMargin: 4
     useFileScale: 1
     previousCalculatedGlobalScale: 1
-    hasPreviousCalculatedGlobalScale: 1
+    hasPreviousCalculatedGlobalScale: 0
   tangentSpace:
     normalSmoothAngle: 60
     normalImportMode: 0
@@ -91,7 +97,7 @@ ModelImporter:
     hasExtraRoot: 0
     skeletonHasParents: 1
   lastHumanDescriptionAvatarSource: {instanceID: 0}
-  animationType: 2
+  animationType: 0
   humanoidOversampling: 1
   additionalBone: 0
   userData: 

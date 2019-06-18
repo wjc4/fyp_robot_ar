@@ -5,47 +5,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.UI;
 
-[System.Serializable]
-public class UpdatePayload
-{
-    public string id;
-    public int checkpoint;
-    public int lap;
-}
-
-[System.Serializable]
-public class UpdateResponse
-{
-    public string id;
-    public int checkpoint;
-    public int lap;
-    public int rank;
-    public int num_players;
-    public BuffHistory[] buffs;
-    public string pickup;
-}
-
-[System.Serializable]
-public class BuffHistory
-{
-    public string id;
-    public string buff;
-}
-
-[System.Serializable]
-public class GameEndPayload
-{
-    public string id;
-}
-
-[System.Serializable]
-public class GameEndResponse
-{
-    public int rank;
-    public int num_players;
-}
-
-public class CollisionHandler : MonoBehaviour
+public class SPCollisionHandler : MonoBehaviour
 {
 
     //public TextMeshProUGUI flagText;
@@ -55,17 +15,10 @@ public class CollisionHandler : MonoBehaviour
     public Image NotificationBG;
     public float respawntime = 2f;
 
-    // @TODO fix this hardcode section
-    public string multiplayer_id;
-    public string serverUrl;
-    private string updateAPI;
-    private string gameEndAPI;
+
     public Text PositionText;
     public GameObject gameOverPanel;
     public Text gameOverText;
-    public GameObject pickupPanel;
-    public Text pickupText;
-    public GameObject blurPanel;
 
     private int CurrSection = 1;
     private int CurrLap = 1;
@@ -89,7 +42,7 @@ public class CollisionHandler : MonoBehaviour
             NextObjectTarget = newNextObjectTarget;
             First = newFirst;
             Last = newLast;
-            
+
         }
     }
     private readonly CheckpointInfo initCheckpoint = new CheckpointInfo("Target1", 1, "Target2", true, false);
@@ -98,8 +51,8 @@ public class CollisionHandler : MonoBehaviour
 
 
 
-// Start is called before the first frame update
-void Start()
+    // Start is called before the first frame update
+    void Start()
     {
         FlagText.text = "Section: " + CurrSection + "/" + TotalSection;
         LapText.text = "Lap: " + CurrLap + "/" + TotalLap;
@@ -107,16 +60,7 @@ void Start()
         Disappear(NotificationText);
         Disappear(NotificationBG);
 
-
-
-        //@TODO fix this once server changes
-        updateAPI = serverUrl + "update";
-        gameEndAPI = serverUrl + "complete";
-        UpdatePayload updateData = new UpdatePayload();
-        updateData.id = multiplayer_id;
-        updateData.checkpoint = CurrSection;
-        updateData.lap = CurrLap;
-        StartCoroutine(UpdateRank(updateData));
+        StartCoroutine(UpdateRank());
 
 
 
@@ -153,23 +97,6 @@ void Start()
 
     void OnTriggerEnter(Collider col)
     {
-        //old
-        /*
-
-        if (col.gameObject.name == "Flag1" || col.gameObject.name == "Flag2")
-        {
-            Disappear(col.gameObject);
-            UpdateText(col.gameObject);
-            StartCoroutine(Respawn(respawntime, col.gameObject));
-        }
-        else if (col.gameObject.name == "Teleporter Pad A")
-        {
-            teleportSound.Play();
-        }
-
-         */
-
-        //new
         string tempname = col.gameObject.name;
         //This is a safer, but slow, method of accessing
         //values in a dictionary.
@@ -235,11 +162,12 @@ void Start()
             {
                 UpdateStats();
 
-            } else
+            }
+            else
             {
                 WrongFlagAlert();
             }
-   
+
         }
         else if (obj.name == "Flag2")
         {
@@ -294,7 +222,7 @@ void Start()
 
     protected virtual void UpdateStats()
     {
-        
+
         if (CurrSection == TotalSection)
         {
             if (CurrLap == TotalLap)
@@ -304,132 +232,31 @@ void Start()
             CurrLap = (CurrLap) % TotalLap + 1;
         }
 
-        CurrSection = (CurrSection)%TotalSection+1;
+        CurrSection = (CurrSection) % TotalSection + 1;
         FlagText.text = "Section: " + CurrSection + "/" + TotalSection;
         LapText.text = "Lap: " + CurrLap + "/" + TotalLap;
-        UpdatePayload updateData = new UpdatePayload();
-        updateData.id = multiplayer_id;
-        updateData.checkpoint = CurrSection;
-        updateData.lap = CurrLap;
-        StartCoroutine(UpdateRank(updateData));
+        StartCoroutine(UpdateRank());
     }
 
-    IEnumerator UpdateRank(UpdatePayload updateData)
+    IEnumerator UpdateRank()
     {
-        var jsonString = JsonUtility.ToJson(updateData);
-        UnityWebRequest request = UnityWebRequest.Put(updateAPI, jsonString);
-        request.SetRequestHeader("Content-Type", "application/json");
-
-        yield return request.SendWebRequest();
-
-        if (request.isNetworkError || request.isHttpError)
-        {
-            Debug.Log(request.error);
-        }
-        else
-        {
-            // Show results as text
-            Debug.Log(request.downloadHandler.text);
-            UpdateResponse response = JsonUtility.FromJson<UpdateResponse>(request.downloadHandler.text);
-            var rank = response.rank;
-            var num_players = response.num_players;
-            PositionText.text = "Position: " + rank + "/" + num_players;
-            if (response.pickup != "nothing")
-            {
-                StartCoroutine(ShowPickup(response.pickup, 3.0f)); 
-            }
-
-            CarHandler car = GetComponent<CarHandler>();
-            //effect buff on user (boost, stun, slow, blur)
-            if (response.buffs.Length != 0)
-            {
-                float multiplier = 1;
-                for (int i = 0; i<response.buffs.Length; i++)
-                {
-                    switch (response.buffs[i].buff)
-                    {
-                        case "boost":
-                            multiplier *= 1.3f;
-                            break;
-                        case "stun":
-                            car.stun = true;
-                            break;
-                        case "slow":
-                            multiplier *= 0.7f;
-                            break;
-                        case "blur":
-                            StartCoroutine(BlurScreen());
-                            break;
-                    }
-                }
-                car.multiplier = multiplier;
-            } else
-            {
-                car.stun = false;
-                car.multiplier = 1;
-            }
-            
-        }
-    }
-
-    IEnumerator BlurScreen()
-    {
-        blurPanel.SetActive(true);
-        yield return new WaitForSeconds(1);
-        blurPanel.SetActive(false);
+        yield return true;
+        var rank = "1";
+        var num_players = "1";
+        PositionText.text = "Position: " + rank + "/" + num_players;
     }
 
     protected virtual void UpdateProgress()
     {
-        UpdatePayload updateData = new UpdatePayload();
-        updateData.id = multiplayer_id;
-        updateData.checkpoint = CurrSection;
-        updateData.lap = CurrLap;
-        StartCoroutine(UpdateRank(updateData));
+        StartCoroutine(UpdateRank());
     }
 
     IEnumerator GameEnd()
     {
-        GameEndPayload gameEndData = new GameEndPayload();
-        gameEndData.id = multiplayer_id;
-        var jsonString = JsonUtility.ToJson(gameEndData);
-        UnityWebRequest request = UnityWebRequest.Put(gameEndAPI, jsonString);
-        request.SetRequestHeader("Content-Type", "application/json");
+        yield return true;
+        gameOverText.text = "You Win!";
+        gameOverPanel.SetActive(true);
 
-        yield return request.SendWebRequest();
-
-        if (request.isNetworkError || request.isHttpError)
-        {
-            Debug.Log(request.error);
-        }
-        else
-        {
-            // Show results as text
-            Debug.Log(request.downloadHandler.text);
-            GameEndResponse response = JsonUtility.FromJson<GameEndResponse>(request.downloadHandler.text);
-            var rank = response.rank;
-            var num_players = response.num_players;
-            // @TODO print you win
-            if (rank == 1)
-            {
-                gameOverText.text = "You Win!";
-            } else
-            {
-                gameOverText.text = "You Lose!";
-            }
-            
-            gameOverPanel.SetActive(true);
-            
-
-        }
-    }
-
-    IEnumerator ShowPickup(string Message, float duration)
-    {
-        pickupText.text = "Activating " + Message + "!";
-        pickupPanel.SetActive(true);
-        yield return new WaitForSeconds(duration);
-        pickupPanel.SetActive(false);
     }
 
     protected virtual void WrongFlagAlert()
